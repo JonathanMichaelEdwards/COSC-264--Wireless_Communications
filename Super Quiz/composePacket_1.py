@@ -36,7 +36,7 @@ def composepacket (version, hdrlen, tosdscp, totallength, identification, flags,
     Encode and compose a 20 Byte data Packet.
     """
     packetSize = bytearray(0)
-    listCkeck = [
+    listCheck = [
         (hdrlen, 4, 2), (tosdscp, 6, 3), (totallength, 16, 4), (identification, 16, 5), (flags, 3, 6),
         (fragmentoffset, 13, 7), (timetolive, 8, 8), (protocoltype, 8, 9), (headerchecksum, 16, 10),
         (sourceaddress, 32, 11), (destinationaddress, 32, 12)
@@ -47,10 +47,9 @@ def composepacket (version, hdrlen, tosdscp, totallength, identification, flags,
         return 1
 
     # Checks to see if listCheck contains an error
-    for i in listCkeck:
+    for i in listCheck:
         if errorChecker(i[0], i[1], i[2]) is not None:  # if error is not None return error code
             return errorChecker(i[0], i[1], i[2])
-
 
     # Compose packet data
     packetSize += bytes([version << 4 | hdrlen])               # 1 Byte used for version and hdrlen
@@ -58,8 +57,9 @@ def composepacket (version, hdrlen, tosdscp, totallength, identification, flags,
     packetSize += bitEncoder16(totallength)                    # 2 Bytes used to encode totallength 
     packetSize += bitEncoder16(identification)                 # 2 Bytes used to encode identification
 
-    byte1 = flags << 3 | fragmentoffset >> 8                   # 2 Bytes used to encode flags and offset
-    packetSize += bytes([byte1]) + bytes([fragmentoffset])
+                 
+    byte1 = flags << 5 | fragmentoffset >> 8                   # 2 Bytes used to encode flags and offset
+    packetSize += bytes([byte1]) + bytes([fragmentoffset & 0xFF])
 
     packetSize += bytes([timetolive]) + bytes([protocoltype])  # (x2) 1 Byte each for timetolive and protocoltype
     packetSize += bitEncoder16(headerchecksum)                 # 2 Bytes used to encode headerchecksum
@@ -68,4 +68,3 @@ def composepacket (version, hdrlen, tosdscp, totallength, identification, flags,
 
 
     return packetSize
-    
