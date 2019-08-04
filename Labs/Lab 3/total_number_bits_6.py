@@ -10,9 +10,8 @@ def total_number_bits (maxUserDataBitsPerPacket_b, overheadBitsPerPacket_b, mess
     while packageAmount < M:
         if packageAmount <= M-maxBits:
             packageAmount += S
-            packetsCount += 1
         else:
-            packetsCount += 1
             packageAmount += O
+        packetsCount += 1
 
     return ((packetsCount * O) + M )
