@@ -51,6 +51,7 @@ def composepacket (version, hdrlen, tosdscp, totallength, identification, flags,
         if errorChecker(i[0], i[1], i[2]) is not None:  # if error is not None return error code
             return errorChecker(i[0], i[1], i[2])
 
+
     # Compose packet data
     packetSize += bytes([version << 4 | hdrlen])               # 1 Byte used for version and hdrlen
     packetSize += bytes([tosdscp << 2 | 0])                    # 1 Byte used for tosdscp with 2 unused bits
