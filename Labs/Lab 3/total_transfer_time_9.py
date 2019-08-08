@@ -10,11 +10,14 @@ def total_transfer_time (linkLength_km, speedOfLight_kms, processingDelay_s, dat
     o = overheadBitsPerPacket_b
     m = messageLength_b
 
-    bitsPerPacket = total_number_bits(s, o, m)
+    bitsPerPacket = s + o
+    numPackets = m / s
+    totalBits = (o*numPackets) + m
     propogation = (l / c)
-    transmission = bitsPerPacket / r
+    transmission_1 = bitsPerPacket / r  # Send bits per packet
+    transmission_2 = (totalBits / r)    # Send total bits
 
-    return (propogation + transmission + p) * 2
+    return (((propogation + p) * 2) + transmission_1 + transmission_2)
 
-print ("{:.4f}".format(total_transfer_time(20000, 200000, 0.001, 1000000, 1000, 100, 5000)))
-# 0.2086
+
+print ("{:.5f}".format(total_transfer_time (10000, 200000, 0.001, 1000000, 1000, 100, 1000000000)))
