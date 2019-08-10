@@ -9,3 +9,5 @@ def destaddress(pkt):
     dd = "{0}.{1}.{2}.{3}".format(addr >> 24, (addr >> 16) & 0xFF , (addr >> 8) & 0xFF, addr & 0xFF)
     
     return (addr, dd)
+
+print(destaddress(bytearray(b'E\x00\x00\x1e\x04\xd2\x00\x00@\x06\x00\x00\x00\x124V3DUf')))
