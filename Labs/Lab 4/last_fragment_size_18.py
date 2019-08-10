@@ -12,9 +12,9 @@ def last_fragment_size(messageSize_bytes, overheadPerPacket_bytes, maximumNPacke
     pktMax = m - o
     fragments = ceil(s / pktMax)
     overallPkt = s + o
-    print(fragments)
+
     return overallPkt - pktMax * (fragments-1)
 
 
 # print(last_fragment_size(1500, 20, 1500)) # Q)20; Ans = 40
-print(last_fragment_size(10000, 20, 1500)) # Q)22; Ans = 1140
+# print(last_fragment_size(10000, 20, 1500)) # Q)22; Ans = 1140
