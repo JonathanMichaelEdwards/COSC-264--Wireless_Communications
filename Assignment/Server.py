@@ -21,7 +21,7 @@ def acceptSocket(soc):
     """
     port = soc.getsockname()[1]
     fd, addr = soc.accept()
-    print("{0}  IP = {1}  Port = {2}".format(currentTime(), addr[0], port))
+    print("- {0}  IP = {1}  Port = {2}".format(currentTime(), addr[0], port))
 
     return fd
 
@@ -32,29 +32,30 @@ def setUpServer():
     """
     # Analysing the entered port number
     port = int(input("Please enter in a Port Number: "))
-    if port < 1024 and 64000 > port:
-        print("ERROR: Port number '{0}' is not within values 1,024 and 64,000.".format(port))
+    if port < 1024 or 64000 < port:
+        print("\nERROR: Port number '{0}' is not within values 1,024 and 64,000...\n" +
+        "Terminating Program.".format(port))
         exit()
     
     # Attempting to create a socket
     try:
         soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except socket.error as e:
-        print(str(e))
+        print('\n',str(e))
         exit()
     
     # Attempting to bind to the port number
     try:
         soc.bind(('', port))
     except socket.error as e:
-        print(str(e))
+        print('\n',str(e))
         exit()
 
     # Attempting to listen for the socket
     try:
         soc.listen(1)
     except socket.error as e:
-        print(str(e))
+        print('\n',str(e))
         soc.close()
         exit()
 
@@ -79,12 +80,14 @@ def main():
     Runs and Controls the program flow of the server.
     """
     soc = setUpServer()
-    print("Waiting to be connected...")
+    print("Waiting for Client to connect...")
     runServer(soc)
     
 
 
 main()
+
+# cs18189kq
 
 
 # record = bytearray(0)
