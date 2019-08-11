@@ -1,1 +1,1 @@
-runServer
+soc

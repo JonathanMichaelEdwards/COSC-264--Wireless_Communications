@@ -20,16 +20,16 @@ def acceptSocket(soc):
     Printing server acceptance message.
     """
     port = soc.getsockname()[1]
-    _, addr = soc.accept()
+    fd, addr = soc.accept()
     print("{0}  IP = {1}  Port = {2}".format(currentTime(), addr[0], port))
+
+    return fd
 
 
 def setUpServer():
     """
     Checking for errors and setting up the server.
     """
-    host = 'jonathan'
-
     # Analysing the entered port number
     port = int(input("Please enter in a Port Number: "))
     if port < 1024 and 64000 > port:
@@ -45,19 +45,19 @@ def setUpServer():
     
     # Attempting to bind to the port number
     try:
-        soc.bind((host, port))
+        soc.bind(('', port))
     except socket.error as e:
         print(str(e))
         exit()
 
     # Attempting to listen for the socket
     try:
-        soc.listen(5)
+        soc.listen(1)
     except socket.error as e:
         print(str(e))
         soc.close()
         exit()
-    
+
     return soc
 
 
@@ -66,7 +66,12 @@ def runServer(soc):
     Runs the server until closed/exited.
     """
     while 1:
-        acceptSocket(soc)
+        fd = acceptSocket(soc)
+        data = fd.recv(20)
+        print("The data is: ", str(data))
+        # fd.send(data)
+
+    # fd.close()
 
 
 def main():
@@ -74,8 +79,23 @@ def main():
     Runs and Controls the program flow of the server.
     """
     soc = setUpServer()
+    print("Waiting to be connected...")
     runServer(soc)
     
 
 
 main()
+
+
+# record = bytearray(0)
+
+
+# # Reading the fixed header bytes into a bytearray
+# byte1 = fr.magicNum >> 8    
+# byte2 = fr.magicNum & 0xFF      
+# byte3 = fr._type               
+# byte4 = fr.fileNameLen >> 8     
+# byte5 = fr.fileNameLen & 0xFF
+
+# record += bytes([byte1]) + bytes([byte2]) + bytes([byte3]) + bytes([byte4]) + bytes([byte5])
+# print(record)

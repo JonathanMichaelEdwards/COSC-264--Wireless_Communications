@@ -20,14 +20,14 @@ MAGIC_NO = 0x497E  # required safeguard
 TYPE     = 0x1     # required Type
 
 
-class ValidityChecks():
+class FileRequest():
     """ 
-    Checking the Fixed header properties.
+    Creating a file request.
     """
     
     def __init__(self, magicNum, fileNameLen, _type=TYPE):
         """ 
-        Initialises the Fixed Header data.
+        Init
         """
         self.magicNum = magicNum
         self.fileNameLen = fileNameLen
@@ -42,4 +42,3 @@ class ValidityChecks():
         if (self.magicNum != MAGIC_NO) or checkFileLen or (self._type != TYPE):
             return EXIT_FAILURE
         return EXIT_SUCCESS
-

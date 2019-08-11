@@ -6,7 +6,7 @@
 
 import time
 import socket
-from FileRequest import ValidityChecks
+from FileRequest import FileRequest
 
 
 def currentTime():
@@ -21,7 +21,7 @@ def acceptSocket(soc):
     Printing server acceptance message.
     """
     port = soc.getsockname()[1]
-    _, addr = soc.accept()
+    fd, addr = soc.accept()
     
     print("{0}  IP = {1}  Port = {2}".format(currentTime(), addr[0], port))
 
@@ -47,11 +47,13 @@ def setUpClient():
         print("ERROR: Port number '{0}' is not within values 1,024 and 64,000.".format(port))
         exit()
 
+    #------ unsure
     # try:
     #     fOpen = open(fileName, 'r')
     # except FileExistsError as e:
     #     print(str(e))
     #     exit()
+    #------------
     
 
     # Attempting to create a socket
@@ -61,30 +63,27 @@ def setUpClient():
         print(str(e))
         exit()
 
-    # # Attempting to bind to the port number
-    # try:
-    #     soc.connect(addrInfo)
-    # except socket.error as e:
-    #     print(str(e))
-    #     exit()
+    # Attempting to connect with the server
+    try:
+        soc.connect(addrInfo[0][-1])
+    except socket.error as e:
+        print(str(e))
+        exit()
 
-    # # Attempting to listen for the socket
-    # try:
-    #     soc.listen(5)
-    # except socket.error as e:
-    #     print(str(e))
-    #     soc.close()
-    #     exit()
+    # Preparing a File Request record for the server
+    # fr = FileRequest(0x497E, 5)
+    myString = "hello world"
+    soc.send(myString.encode('utf-8'))
     
     return soc
 
 
-def runClient(soc):
-    """
-    Runs the server until closed/exited.
-    """
-    while 1:
-        acceptSocket(soc)
+# def runClient(soc):
+#     """
+#     Runs the server until closed/exited.
+#     """
+#     while 1:
+#         acceptSocket(soc)
 
 
 def main():
@@ -93,7 +92,6 @@ def main():
     """
     soc = setUpClient()
     # runClient(soc)
-
 
 
 main()
