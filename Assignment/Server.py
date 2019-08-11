@@ -3,9 +3,9 @@
 """
 
 
+
 import time
 import socket
-
 
 
 def currentTime():
@@ -15,33 +15,23 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
 
-
 def acceptSocket(soc):
     """
     Printing server acceptance message.
     """
     port = soc.getsockname()[1]
     _, addr = soc.accept()
-    
     print("{0}  IP = {1}  Port = {2}".format(currentTime(), addr[0], port))
 
 
-
-def fileRequest():
-    """
-    Reading a FileRequest record from the connection.
-    """
-
-
-
-def setupServer():
+def setUpServer():
     """
     Checking for errors and setting up the server.
     """
-    host = ''
+    host = 'jonathan'
 
-    # Analysing port number
-    port = int(input("Select a Port Number: "))
+    # Analysing the entered port number
+    port = int(input("Please enter in a Port Number: "))
     if port < 1024 and 64000 > port:
         print("ERROR: Port number '{0}' is not within values 1,024 and 64,000.".format(port))
         exit()
@@ -71,24 +61,21 @@ def setupServer():
     return soc
 
 
-
 def runServer(soc):
     """
     Runs the server until closed/exited.
     """
     while 1:
         acceptSocket(soc)
-        fileRequest()
-
 
 
 def main():
     """
     Runs and Controls the program flow of the server.
     """
-    soc = setupServer()
+    soc = setUpServer()
     runServer(soc)
-
+    
 
 
 main()
