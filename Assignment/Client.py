@@ -4,11 +4,15 @@
 
 
 
+import os
 import time
 import socket
-import os
 from FileRequest import FileRequest
+from FileResponse import FileResponse, decodeFixedHeader
 
+
+# Fixed constants
+BUFFER_SIZE = 200
 
 
 def currentTime():
@@ -16,6 +20,44 @@ def currentTime():
     Returns the current time
     """
     return time.strftime("%H:%M:%S", time.localtime())
+
+    
+def readResponse(soc, data):
+    """
+    ...
+    """
+    # Reads the first 8 bytes
+    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data) 
+
+    decodedData = data.decode('utf-8')  # decoding byte data
+    print(decodedData)
+    # Reads the first 8 bytes
+    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
+    # # Reads the first 5 bytes
+    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
+
+    # # If the time gap is greater then 1, restart process
+    # if (time.clock()-startTime) >= 1.0:
+    #     print("\nERROR: File Request is erroneous, aborting...")
+    #     print("Please try again.\n")
+    #     fd.close()      # Closing th File Directory (fd) socket
+
+    # # Checking the validity of the File Request
+    # fr = FileRequest(magicNum, fileNameLen, _type) 
+    # if fr.responseChecker():
+    #     print("\nERROR: Couldn't read the record from the socket...")
+    #     print("Please try again.\n")
+    #     fd.close()      # Closing th File Directory (fd) socket
+
+    
+    # # Attempting to read the file to see if it exists
+    # fileName = data[5:].decode('utf-8')  # decoding file from byte array 
+    # if not os.path.exists("Server/"+fileName):
+    #     print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
+    #     print("Please try again.\n")
+    #     fd.close()      # Closing th File Directory (fd) socket
+    
+    # return fileName
 
 
 def sendRequest(soc, fileName):
@@ -29,7 +71,7 @@ def sendRequest(soc, fileName):
     fr = FileRequest(number, fileName)
     fr.encodeFixedHeader(record)
     
-    # Sending Info to Server
+    # Sending Info to the Server
     soc.send(record)
     soc.send(fileName.encode('utf-8'))
 
@@ -78,12 +120,14 @@ def setUpClient():
     return (soc, fileName)
 
 
-def main():
+def runClient():
     """
-    Runs and Controls the program flow of the server.
+    Runs and Controls the program flow of the Client.
     """
     (soc, fileName) = setUpClient()
     sendRequest(soc, fileName)  # Sending a request
+    data = soc.recv(BUFFER_SIZE)  # Data sent from Client through a socket
+    readResponse(soc, data)
 
 
-main()
+runClient()

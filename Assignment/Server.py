@@ -3,11 +3,12 @@
 """
 
 
-
-import time
 import os
+import time
 import socket
 from FileRequest import FileRequest, decodeFixedHeader
+from FileResponse import FileResponse
+
 
 
 # Fixed constants
@@ -21,7 +22,34 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
 
-def fileRequestHeader(soc, fd, data, startTime):
+def sendResponse(soc, fd, fRead):
+    """
+    Sends byte data detailing the information the Client would like to
+    retrieve from the Server.
+    """
+    record = bytearray(0)
+    number = 0x497E
+
+    fr = FileResponse(number, 1, 30)
+    fr.encodeFixedHeader(record)
+    
+    # Sending Info to Server
+    for line in fRead:
+        fd.send(line)
+
+
+def openFile(fileName):
+    """
+    ...
+    """
+    fOpen = open("Server/"+fileName, 'rb')
+    fRead = fOpen.readlines()
+
+    return fRead
+
+
+
+def fileRequest(soc, fd, data, startTime):
     """
     ...
     """
@@ -37,19 +65,21 @@ def fileRequestHeader(soc, fd, data, startTime):
 
     # Checking the validity of the File Request
     fr = FileRequest(magicNum, fileNameLen, _type) 
-    if fr.getChecker():
+    if fr.requestChecker():
         print("\nERROR: Couldn't read the record from the socket...")
         print("Please try again.\n")
         fd.close()      # Closing th File Directory (fd) socket
         runServer(soc)  # Restating the loop process 
     
-    # Reading the file to see if exists
-    fileName = data[5:].decode('utf-8')  # decoding file from byte array 
+    # Attempting to read the file to see if it exists
+    fileName = data[5:].decode('utf-8')  # decoding byte data
     if not os.path.exists("Server/"+fileName):
         print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
         print("Please try again.\n")
         fd.close()      # Closing th File Directory (fd) socket
         runServer(soc)  # Restating the loop process 
+    
+    return fileName
 
 
 def acceptSocket(soc):
@@ -107,7 +137,9 @@ def runServer(soc):
         fd = acceptSocket(soc)
         startTime = time.clock()  # Start timer
         data = fd.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-        fileRequestHeader(soc, fd, data, startTime)
+        fileName = fileRequest(soc, fd, data, startTime)
+        fRead = openFile(fileName) 
+        sendResponse(soc, fd, fRead)
 
 
 def main():

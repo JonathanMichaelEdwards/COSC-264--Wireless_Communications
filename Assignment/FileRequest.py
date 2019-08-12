@@ -7,7 +7,7 @@ The File Request record Fixed Header contains:
 - 16 bit field for the length of the file name,
   the value needs to be between 1 and 1,024 and the value
   is denoted as the varible n.
-- Finally the record contains n byts for the actual filename.
+- Finally the record contains (n * 1 byte) for the actual filename.
 """
 
 
@@ -15,8 +15,9 @@ The File Request record Fixed Header contains:
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
 
-MAGIC_NO = 0x497E  # required safeguard
-TYPE     = 0x1     # required Type
+BYTE_MASK = 0xFF
+MAGIC_NO  = 0x497E  # required safeguard
+TYPE      = 0x1     # required Type
 
 
 class FileRequest():
@@ -46,15 +47,15 @@ class FileRequest():
         """
         # Encoding Fixed Header
         byte1 = self.magicNum >> 8    
-        byte2 = self.magicNum & 0xFF      
+        byte2 = self.magicNum & BYTE_MASK    
         byte3 = self._type               
         byte4 = self.fileNameLen >> 8     
-        byte5 = self.fileNameLen & 0xFF
+        byte5 = self.fileNameLen & BYTE_MASK
     
         record += bytes([byte1]) + bytes([byte2]) + bytes([byte3]) + bytes([byte4]) + bytes([byte5])
 
 
-    def getChecker(self):
+    def requestChecker(self):
         """
         Checks the validity of the File Request record and returns the 
         status of the Fixed Header.
@@ -72,8 +73,8 @@ def decodeFixedHeader(data):
     values, (magicNum, _type and fileNameLen).
     """
     # Decoding Fixed Header
-    magicNum = data[0] << 8 | data[1]    
+    magicNum = (data[0] << 8) | (data[1] & BYTE_MASK)    
     _type = data[2]   
-    fileNameLen = data[3] << 8 | data[4]
+    fileNameLen = (data[3] << 8) | (data[4] & BYTE_MASK)
 
     return (magicNum, _type, fileNameLen)
