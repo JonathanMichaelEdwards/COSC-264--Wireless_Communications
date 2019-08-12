@@ -5,7 +5,13 @@
 
 
 import time
+import os
 import socket
+from FileRequest import FileRequest, decodeFixedHeader
+
+
+# Fixed constants
+BUFFER_SIZE = 200
 
 
 def currentTime():
@@ -13,6 +19,37 @@ def currentTime():
     Returns the current time
     """
     return time.strftime("%H:%M:%S", time.localtime())
+
+
+def fileRequestHeader(soc, fd, data, startTime):
+    """
+    ...
+    """
+    # Reads the first 5 bytes
+    (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
+
+    # If the time gap is greater then 1, restart process
+    if (time.clock()-startTime) >= 1.0:
+        print("\nERROR: File Request is erroneous, aborting...")
+        print("Please try again.\n")
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
+
+    # Checking the validity of the File Request
+    fr = FileRequest(magicNum, fileNameLen, _type) 
+    if fr.getChecker():
+        print("\nERROR: Couldn't read the record from the socket...")
+        print("Please try again.\n")
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
+    
+    # Reading the file to see if exists
+    fileName = data[5:].decode('utf-8')  # decoding file from byte array 
+    if not os.path.exists("Server/"+fileName):
+        print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
+        print("Please try again.\n")
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
 
 
 def acceptSocket(soc):
@@ -33,8 +70,8 @@ def setUpServer():
     # Analysing the entered port number
     port = int(input("Please enter in a Port Number: "))
     if port < 1024 or 64000 < port:
-        print("\nERROR: Port number '{0}' is not within values 1,024 and 64,000...\n" +
-        "Terminating Program.".format(port))
+        print("\nERROR: Port number '{0}' is not within values 1,024 and 64,000...".format(port))
+        print("Terminating Program")
         exit()
     
     # Attempting to create a socket
@@ -68,11 +105,9 @@ def runServer(soc):
     """
     while 1:
         fd = acceptSocket(soc)
-        data = fd.recv(20)
-        print("The data is: ", str(data))
-        # fd.send(data)
-
-    # fd.close()
+        startTime = time.clock()  # Start timer
+        data = fd.recv(BUFFER_SIZE)  # Data sent from Client through a socket
+        fileRequestHeader(soc, fd, data, startTime)
 
 
 def main():
@@ -84,21 +119,4 @@ def main():
     runServer(soc)
     
 
-
 main()
-
-# cs18189kq
-
-
-# record = bytearray(0)
-
-
-# # Reading the fixed header bytes into a bytearray
-# byte1 = fr.magicNum >> 8    
-# byte2 = fr.magicNum & 0xFF      
-# byte3 = fr._type               
-# byte4 = fr.fileNameLen >> 8     
-# byte5 = fr.fileNameLen & 0xFF
-
-# record += bytes([byte1]) + bytes([byte2]) + bytes([byte3]) + bytes([byte4]) + bytes([byte5])
-# print(record)
