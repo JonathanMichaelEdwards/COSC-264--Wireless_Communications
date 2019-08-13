@@ -22,7 +22,7 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
 
-def sendResponse(soc, fd, fRead):
+def sendResponse(fd, fRead, statusCode):
     """
     Sends byte data detailing the information the Client would like to
     retrieve from the Server.
@@ -30,23 +30,39 @@ def sendResponse(soc, fd, fRead):
     record = bytearray(0)
     number = 0x497E
 
-    fr = FileResponse(number, 1, 30)
+    fr = FileResponse(number, statusCode, 200)
     fr.encodeFixedHeader(record)
     
-    # Sending Info to Server
+    # Sending data to server over the File Directory
     for line in fRead:
-        fd.send(line)
+        record += line
+    fd.send(record)
 
 
-def openFile(fileName):
+def readFile(fileName):
     """
-    ...
+    Reading byte data from the file.
     """
-    fOpen = open("Server/"+fileName, 'rb')
-    fRead = fOpen.readlines()
+    return open("Server/"+fileName, 'rb').readlines()
 
-    return fRead
 
+def checkFile(soc, fd, data, fileName):
+    """
+    Attempting to read the file to see if it exists
+    locally in the Server and is readable.
+    - Returns Status Code of 1 when file exists and
+      can be opened, otherwise 0.
+    """  
+    statusCode = True
+
+    if not os.path.exists("Server/"+fileName):
+        statusCode = False
+        print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
+        print("Please try again.\n")
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
+
+    return statusCode
 
 
 def fileRequest(soc, fd, data, startTime):
@@ -71,15 +87,10 @@ def fileRequest(soc, fd, data, startTime):
         fd.close()      # Closing th File Directory (fd) socket
         runServer(soc)  # Restating the loop process 
     
-    # Attempting to read the file to see if it exists
     fileName = data[5:].decode('utf-8')  # decoding byte data
-    if not os.path.exists("Server/"+fileName):
-        print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
-        print("Please try again.\n")
-        fd.close()      # Closing th File Directory (fd) socket
-        runServer(soc)  # Restating the loop process 
+    statusCode = checkFile(soc, fd, data, fileName)  # Gets the status code
     
-    return fileName
+    return (fileName, statusCode)
 
 
 def acceptSocket(soc):
@@ -133,13 +144,13 @@ def runServer(soc):
     """
     Runs the server until closed/exited.
     """
-    while 1:
+    while True:
         fd = acceptSocket(soc)
         startTime = time.clock()  # Start timer
         data = fd.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-        fileName = fileRequest(soc, fd, data, startTime)
-        fRead = openFile(fileName) 
-        sendResponse(soc, fd, fRead)
+        (fileName, statusCode) = fileRequest(soc, fd, data, startTime)
+        fRead = readFile(fileName) 
+        sendResponse(fd, fRead, statusCode)
 
 
 def main():

@@ -22,42 +22,33 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
     
-def readResponse(soc, data):
+def readResponse(soc, data, startTime):
     """
     ...
     """
+    fixedHeader = data[:8]  # Fixed Header byte array
+    acturalData = data[8:]  # Actual Data byte array
+
     # Reads the first 8 bytes
-    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data) 
+    (magicNum, _type, statusCode, dataLength) = decodeFixedHeader(fixedHeader) 
 
-    decodedData = data.decode('utf-8')  # decoding byte data
-    print(decodedData)
-    # Reads the first 8 bytes
-    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
-    # # Reads the first 5 bytes
-    # (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
+    # If the time gap is greater then 1, terminate the program
+    if (time.clock()-startTime) >= 1.0:
+        print("\nERROR: File Response is erroneous...\nTerminating Program")
+        soc.close()  # Closing the socket
+        exit()
 
-    # # If the time gap is greater then 1, restart process
-    # if (time.clock()-startTime) >= 1.0:
-    #     print("\nERROR: File Request is erroneous, aborting...")
-    #     print("Please try again.\n")
-    #     fd.close()      # Closing th File Directory (fd) socket
+    # Checking the validity of the File Response
+    fr = FileResponse(magicNum, statusCode, dataLength, _type) 
+    if fr.responseChecker():
+        print("\nERROR: File Response is erroneous...\nTerminating Program")
+        soc.close()  # Closing the socket
+        exit()
 
-    # # Checking the validity of the File Request
-    # fr = FileRequest(magicNum, fileNameLen, _type) 
-    # if fr.responseChecker():
-    #     print("\nERROR: Couldn't read the record from the socket...")
-    #     print("Please try again.\n")
-    #     fd.close()      # Closing th File Directory (fd) socket
-
-    
-    # # Attempting to read the file to see if it exists
-    # fileName = data[5:].decode('utf-8')  # decoding file from byte array 
-    # if not os.path.exists("Server/"+fileName):
-    #     print("\nERROR: File '{0}' doesn't exist locally in Server, aborting...".format(fileName))
-    #     print("Please try again.\n")
-    #     fd.close()      # Closing th File Directory (fd) socket
-    
-    # return fileName
+    # Reading the actual data sent from Server
+    if statusCode:
+        print(acturalData.decode('utf-8'))  # decoding byte data
+        
 
 
 def sendRequest(soc, fileName):
@@ -109,6 +100,7 @@ def setUpClient():
     except socket.error as e:
         print('\n',str(e))
         exit()
+    startTime = time.clock()  # Start timer
 
     # Attempting to connect with the server
     try:
@@ -117,17 +109,17 @@ def setUpClient():
         print('\n',str(e))
         exit()
 
-    return (soc, fileName)
+    return (soc, fileName, startTime)
 
 
 def runClient():
     """
     Runs and Controls the program flow of the Client.
     """
-    (soc, fileName) = setUpClient()
+    (soc, fileName, startTime) = setUpClient()
     sendRequest(soc, fileName)  # Sending a request
     data = soc.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-    readResponse(soc, data)
+    readResponse(soc, data, startTime)  # Read response from server
 
 
 runClient()

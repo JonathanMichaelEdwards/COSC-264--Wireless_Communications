@@ -49,11 +49,12 @@ class FileResponse():
 
     def responseChecker(self):
         """
-        Checks the validity of the File Request record and returns the 
-        status of the Fixed Header.
-        - Returns 0 if record is correct.
-        """
         
+        """
+        if ((self.magicNum != MAGIC_NO) or (self._type != TYPE) or 
+            (self.statusCode != 1 and self.statusCode != 0)):
+            return EXIT_FAILURE
+        return EXIT_SUCCESS
 
 
 def decodeFixedHeader(data):
