@@ -12,7 +12,7 @@ from FileResponse import FileResponse, decodeFixedHeader
 
 
 # Fixed constants
-BUFFER_SIZE = 200
+BUFFER_SIZE = 10000
 
 
 def currentTime():
@@ -22,12 +22,20 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
     
-def readResponse(soc, data, startTime):
+def readResponse(soc, data, startTime, msgServer):
     """
     ...
     """
     fixedHeader = data[:8]  # Fixed Header byte array
     acturalData = data[8:]  # Actual Data byte array
+    
+    # Determining the amount of recieved bytes
+    if len(acturalData) == 0:
+        print("\n- Noting was in the file.")
+        soc.close()  # Closing the socket
+        exit()
+    else:
+        print(msgServer)
 
     # Reads the first 8 bytes
     (magicNum, _type, statusCode, dataLength) = decodeFixedHeader(fixedHeader) 
@@ -47,9 +55,10 @@ def readResponse(soc, data, startTime):
 
     # Reading the actual data sent from Server
     if statusCode:
+        print("-"*50)
         print(acturalData.decode('utf-8'))  # decoding byte data
+        print("-"*50)
         
-
 
 def sendRequest(soc, fileName):
     """
@@ -74,7 +83,7 @@ def setUpClient():
     # Analysing the entered host name, port number and file name
     try:
         (host, port, fileName) = input("Please enter in a Hosts Name, " +
-        "Port Number and a File Name:\n- ").split()
+        "Port Number and a File Name:\n>> ").split()
     except ValueError as e:
         print('\n',str(e))
         exit()
@@ -118,8 +127,16 @@ def runClient():
     """
     (soc, fileName, startTime) = setUpClient()
     sendRequest(soc, fileName)  # Sending a request
-    data = soc.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-    readResponse(soc, data, startTime)  # Read response from server
+    msgServer = soc.recv(BUFFER_SIZE).decode('utf-8')  # Print server status on file
+
+    # Attempting to read file
+    if msgServer[2:7] != "ERROR":
+        data = soc.recv(BUFFER_SIZE)  # Data sent from Client through a socket
+        readResponse(soc, data, startTime, msgServer)  # Read response from server
+    else:
+        print(msgServer)
+        soc.close()  # Closing the socket
+        exit()
 
 
 runClient()
