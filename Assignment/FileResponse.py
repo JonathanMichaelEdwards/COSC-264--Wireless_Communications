@@ -1,8 +1,3 @@
-"""
-...
-"""
-
-
 # Fixed constants
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -29,9 +24,10 @@ class FileResponse():
     
     def encodeFixedHeader(self, record):
         """
-        The Fixed Header is made up of five bytes. The Client 
+        The Fixed Header is made up of 8 bytes. The Client 
         sends these bytes over to the Server through the
         socket.
+        - Stores byte informtion in a byte array.
         """
         # Encoding Fixed Header
         byte1 = self.magicNum >> 8    
@@ -59,7 +55,7 @@ class FileResponse():
 
 def decodeFixedHeader(data):
     """
-    Decodes the 5 byte Fixed Header and returns the three wanted
+    Decodes the 8 byte Fixed Header and returns the three wanted
     values, (magicNum, _type and fileNameLen).
     """
     # Decoding Fixed Header

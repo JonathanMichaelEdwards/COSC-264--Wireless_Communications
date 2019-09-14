@@ -1,16 +1,3 @@
-"""
-The File Request record Fixed Header contains:
-
-- 16 bit field for Magic numbers which needs to be 0x497E,
-  this acts as safeguard.
-- 8 bit field for type which contains the fixed value of 1.
-- 16 bit field for the length of the file name,
-  the value needs to be between 1 and 1,024 and the value
-  is denoted as the varible n.
-- Finally the record contains (n * 1 byte) for the actual filename.
-"""
-
-
 # Fixed constants
 EXIT_SUCCESS = 0
 EXIT_FAILURE = 1
@@ -41,9 +28,10 @@ class FileRequest():
     
     def encodeFixedHeader(self, record):
         """
-        The Fixed Header is made up of five bytes. The Client 
+        The Fixed Header is made up of 5 bytes. The Client 
         sends these bytes over to the Server through the
         socket.
+        - Stores byte informtion in a byte array.
         """
         # Encoding Fixed Header
         byte1 = self.magicNum >> 8    

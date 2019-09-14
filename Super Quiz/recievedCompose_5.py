@@ -85,7 +85,7 @@ def revisedcompose(hdrlen, tosdscp, identification, flags, fragmentoffset, timet
 
 
     # Compose packet data
-    pktContents += bytes([version << 4 | hdrlen])                 # 1 Byte used for version and hdrlen
+    pktContents += bytes([version << 4 | hdrlen])                # 1 Byte used for version and hdrlen
     pktContents += bytes([tosdscp << 2 | 0])                     # 1 Byte used for tosdscp with 2 unused bits
     pktContents += bitEncoder16(totalLength)                     # 2 Bytes used to encode totallength 
     pktContents += bitEncoder16(identification)                  # 2 Bytes used to encode identification

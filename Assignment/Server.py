@@ -1,8 +1,3 @@
-"""
-...
-"""
-
-
 import os
 import time
 import socket
@@ -22,50 +17,7 @@ def currentTime():
     return time.strftime("%H:%M:%S", time.localtime())
 
 
-def sendResponse(soc, fd, fRead, statusCode, fileName):
-    """
-    Sends byte data detailing the information the Client would like to
-    retrieve from the Server.
-    """
-    record = bytearray(0)
-    number = 0x497E
-    byteCount = 0
-
-    fr = FileResponse(number, statusCode, BUFFER_SIZE)
-    fr.encodeFixedHeader(record)
-    
-    # Sending data to server over the File Directory
-    for line in fRead:
-        record += line
-        byteCount += len(line) 
-
-    fd.send(record)
-
-    # Clean up with message
-    readFile(fileName, True)  # Close the file
-    fd.close()      # Closing th File Directory (fd) socket
-
-    if byteCount == 0:
-        print("- Nothing to send from file.")
-    else:
-        print("A total of {0} bytes transferred succesfully " \
-        "from the Server to the Client.\n".format(byteCount))
-    runServer(soc)  # Restating the loop process 
-
-
-def readFile(fileName, close):
-    """
-    Reading byte data from the file.
-    """
-    fOpen = open("Server/"+fileName, 'rb')
-    fRead = fOpen.readlines()
-    if close:
-        fOpen.close()
-
-    return fRead
-
-
-def checkFile(soc, fd, data, fileName):
+def checkFile(soc, fd, fileName):
     """
     Attempting to read the file to see if it exists
     locally in the Server and is readable.
@@ -87,11 +39,67 @@ def checkFile(soc, fd, data, fileName):
     return True
 
 
+def readFile(soc, fd, fileName, close):
+    """
+    Reading byte string data from the file.
+    """
+    try:
+        fOpen = open("Server/"+fileName, 'rb')
+        fRead = fOpen.readlines()
+        if close:
+            fOpen.close()
+    except FileNotFoundError as err:
+        print(str(err)+'\n')
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
+
+    return fRead
+
+
+def sendResponse(soc, fd, fRead, fileName):
+    """
+    Sends byte data detailing the information the Client would like to
+    retrieve from the Server.
+    """
+    record = bytearray(0)
+    number = 0x497E
+    dataLength = 0
+    _type = 2
+
+    # Gets the status code  
+    statusCode = checkFile(soc, fd, fileName) 
+
+    if statusCode == 0:
+        dataLength = 0
+
+    fr = FileResponse(number, statusCode, dataLength, _type)
+    fr.encodeFixedHeader(record)
+    
+    # Concatenating string byte data with the 8 byte fixed header
+    for line in fRead:
+        record += line
+        dataLength += len(line) 
+
+    fd.send(record)  # Sending file to Client
+
+    # Clean up with message
+    readFile(soc, fd, fileName, True)
+    fd.close()      # Closing th File Directory (fd) socket
+
+    if dataLength == 0:
+        print("- Nothing to send from file.")
+    else:
+        print("A total of {0} bytes transferred succesfully " \
+        "from the Server to the Client.\n".format(dataLength))
+    runServer(soc)  # Restating the loop process 
+
+
 def fileRequest(soc, fd, data, startTime):
     """
-    ...
+    Checking to see if the server can can send the
+    client a certain file if it exists.
     """
-    # Reads the first 5 bytes
+    # Checks the 5 byte fixed header
     (magicNum, _type, fileNameLen) = decodeFixedHeader(data)  
 
     # If the time gap is greater then 1, restart process
@@ -109,10 +117,15 @@ def fileRequest(soc, fd, data, startTime):
         fd.close()      # Closing th File Directory (fd) socket
         runServer(soc)  # Restating the loop process 
     
-    fileName = data[5:].decode('utf-8')  # decoding byte data
-    statusCode = checkFile(soc, fd, data, fileName)  # Gets the status code
+    fileName = data[5:].decode('utf-8')  # decoding the file name string byte data
     
-    return (fileName, statusCode)
+    if len(fileName) != fileNameLen:
+        print("\nERROR: The file could not be read properly...")
+        print("Please try again.\n")
+        fd.close()      # Closing th File Directory (fd) socket
+        runServer(soc)  # Restating the loop process 
+    
+    return fileName
 
 
 def acceptSocket(soc):
@@ -170,11 +183,9 @@ def runServer(soc):
         fd = acceptSocket(soc)
         startTime = time.clock()  # Start timer
         data = fd.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-        (fileName, statusCode) = fileRequest(soc, fd, data, startTime)
-        fRead = readFile(fileName, False) 
-        sendResponse(soc, fd, fRead, statusCode, fileName)
-
-
+        fileName = fileRequest(soc, fd, data, startTime)
+        fRead = readFile(soc, fd, fileName, False) 
+        sendResponse(soc, fd, fRead, fileName)
 
 
 def main():

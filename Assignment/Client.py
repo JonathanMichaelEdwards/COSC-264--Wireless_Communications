@@ -1,9 +1,3 @@
-"""
-...
-"""
-
-
-
 import os
 import time
 import socket
@@ -21,14 +15,30 @@ def currentTime():
     """
     return time.strftime("%H:%M:%S", time.localtime())
 
-    
-def readResponse(soc, data, startTime, msgServer):
+
+def writeFile(fileName, fileData):
     """
-    ...
+    Writing byte string data into the file.
+    """
+    fOpen = open("Client/"+fileName, 'w')
+    fOpen.write(fileData)
+
+    
+def readResponse(soc, data, startTime, msgServer, fileName):
+    """
+    Read a Response from the Client.
     """
     fixedHeader = data[:8]  # Fixed Header byte array
     acturalData = data[8:]  # Actual Data byte array
-    
+
+    if len(data) <= 8:
+        print("File doesnt exist")
+        soc.close()  # Closing the socket
+        exit()
+
+    # Checks the first 8 bytes
+    (magicNum, _type, statusCode, dataLength) = decodeFixedHeader(fixedHeader) 
+
     # Determining the amount of recieved bytes
     if len(acturalData) == 0:
         print("\n- Noting was in the file.")
@@ -36,9 +46,6 @@ def readResponse(soc, data, startTime, msgServer):
         exit()
     else:
         print(msgServer)
-
-    # Reads the first 8 bytes
-    (magicNum, _type, statusCode, dataLength) = decodeFixedHeader(fixedHeader) 
 
     # If the time gap is greater then 1, terminate the program
     if (time.clock()-startTime) >= 1.0:
@@ -55,9 +62,14 @@ def readResponse(soc, data, startTime, msgServer):
 
     # Reading the actual data sent from Server
     if statusCode:
-        print("-"*50)
-        print(acturalData.decode('utf-8'))  # decoding byte data
-        print("-"*50)
+        writeFile(fileName, acturalData.decode('utf-8'))
+        soc.close()  # Closing the socket
+        exit()
+    else:
+        print("\nERROR: Unable to write the file you requested..." +
+              "\nTerminating Program")
+        soc.close()  # Closing the socket
+        exit()
         
 
 def sendRequest(soc, fileName):
@@ -132,7 +144,7 @@ def runClient():
     # Attempting to read file
     if msgServer[2:7] != "ERROR":
         data = soc.recv(BUFFER_SIZE)  # Data sent from Client through a socket
-        readResponse(soc, data, startTime, msgServer)  # Read response from server
+        readResponse(soc, data, startTime, msgServer, fileName)  # Read response from server
     else:
         print(msgServer)
         soc.close()  # Closing the socket
