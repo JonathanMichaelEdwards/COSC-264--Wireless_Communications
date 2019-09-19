@@ -14,4 +14,4 @@ def number_fragments (messageSize_bytes, overheadPerPacket_bytes, maximumNPacket
     return ceil(fragments)
 
 
-# print(number_fragments(10000, 20, 1500)) # Q)21; Ans = 7
+print(number_fragments(10000, 20, 1500)) # Q)21; Ans = 7
